@@ -1,0 +1,30 @@
+name: CI Tests Workflow [1]
+
+on:
+  push:
+    branches:
+      - '1.18'
+      - '1.19'
+
+env:
+  GIT_SHA: ${{ github.sha }}
+  GIT_REF: ${{ github.ref }}
+  REGISTRY_NAME: gcr.io
+  IMAGE_NAME: nginx
+
+jobs:
+  test:
+    name: Image Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@main
+      - name: Run Compose Tests
+        run: |
+          export TAG=`echo $GIT_REF | awk -F/ '{print $NF}'`
+          if [ -f docker-compose.dev.yml ];
+            docker-compose --file docker-compose."$VERSION".yml build
+            docker-compose --file docker-compose."$VERSION".yml run sut
+          else
+            docker build . --file "$TAG"/Dockerfile
+          fi
